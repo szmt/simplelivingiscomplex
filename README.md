@@ -9,6 +9,7 @@ git clone https://github.com/szmt/simplelivingiscomplex.git
 # Usage
 
 Mac/ Linux - python3 simplelivingiscomplex.py
+
 Win - python simplelivingiscomplex.py
 
 Change sample_config.ini to config.ini before first start.
