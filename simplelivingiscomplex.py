@@ -1,15 +1,18 @@
 from datetime import datetime, date, timedelta
-import config as c
 import caldav
 from caldav.elements import dav, cdav
 import uuid
 import requests
 from requests.auth import HTTPBasicAuth
+import configparser
+
+config = configparser.ConfigParser()
+config.read("config.ini")
 
 def save_to_calendar(_, task):
     event_summary = ""
     for _ in task:
-        if c._remove_due:
+        if config['behaviour']['remove_due']== "1":
             if not _.startswith("due:"):
                 event_summary += _ + " "
         else:
@@ -24,7 +27,7 @@ def save_to_calendar(_, task):
     event_end = (todo_date + timedelta(days=1)).strftime("%Y%m%d")
     event = f"""BEGIN:VCALENDAR
 VERSION:2.0
-PRODID:In Acryl We Trust
+PRODID:SimpleLivingIsComplex
 BEGIN:VEVENT
 UID:{uid}@acrylnimbus.de
 DTSTAMP:{today}T060000Z
@@ -38,31 +41,41 @@ END:VCALENDAR
     cal.save_event(event)
 
 def get_todos():
-    if c._local:
-        fs = open(c._local_path,'r')
+    if config['source']['local']== "1":
+        local_path = config['source']['local_path']
+        fs = open(local_path)
         content = fs.read()
-        print(content)
         fs.close()
         return content
     else:
+        remote_path = config['source']['remote_path']
+        remote_user = config['source']['remote_user']
+        remote_pass = config['source']['remote_pass']
         r = requests.request(
             method='get',
-            url=c._remote_path,
-            auth=(c._calendar_user, c._calendar_pass)
+            url=remote_path,
+            auth=(remote_user, remote_pass)
         )
         return r.text
 
+calendar_protocol = config['calendar']['calendar_protocol']
+calendar_user = config['calendar']['calendar_user']
+calendar_pass = config['calendar']['calendar_pass']
+calendar_url = config['calendar']['calendar_url']
+calendar_name = config['calendar']['calendar_name']
 
-url = c._calendar_protocol+c._calendar_user+":"+c._calendar_pass+"@"+c._calendar_url
+url = calendar_protocol + calendar_user + ":" + calendar_pass + "@" + calendar_url
 client = caldav.DAVClient(url)
 principal = client.principal()
 calendars = principal.calendars()
 
+print("__ simple living is complex __")
+
 for cal in calendars:
     namedict = cal.get_properties([dav.DisplayName()])
-    if namedict["{DAV:}displayname"] == c._calendar_name:
+    if namedict["{DAV:}displayname"] == calendar_name:
         # Deleting ALL old entries
-        if c._delete_old == True:
+        if config['behaviour']['delete_old'] == "1":
             for ev in cal.events():
                 ev.load()
                 e = ev.instance.vevent
