@@ -4,7 +4,8 @@ A tool to generate caldav-calendar events with a due date from your todotxt file
 
 # Installation
 
-git clone https://github.com/szmt/simplelivingiscomplex.git
+* git clone https://github.com/szmt/simplelivingiscomplex.git
+* pip3 install caldav (Mac/ Linux) - pip install caldav (Win) - you might want to use a venv
 
 # Usage
 
