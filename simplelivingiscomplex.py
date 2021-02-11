@@ -5,13 +5,14 @@ import uuid
 import requests
 from requests.auth import HTTPBasicAuth
 import configparser
+import pathlib
 
-config = configparser.ConfigParser()
-config.read("config.ini")
 
+# Writing to calendar
 def save_to_calendar(_, task):
     event_summary = ""
     for _ in task:
+        # Removing due date
         if config['behaviour']['remove_due']== "1":
             if not _.startswith("due:"):
                 event_summary += _ + " "
@@ -40,13 +41,17 @@ END:VCALENDAR
     print("created: " + event_summary)
     cal.save_event(event)
 
+
+# Reading todos
 def get_todos():
+    # From local file
     if config['source']['local']== "1":
         local_path = config['source']['local_path']
         fs = open(local_path)
         content = fs.read()
         fs.close()
         return content
+    # From webdav file
     else:
         remote_path = config['source']['remote_path']
         remote_user = config['source']['remote_user']
@@ -58,6 +63,11 @@ def get_todos():
         )
         return r.text
 
+# Read Configuration
+config = configparser.ConfigParser()
+config.read(str(pathlib.Path(__file__).parent.absolute())+"/config.ini")
+
+# Setting up the calendar connection
 calendar_protocol = config['calendar']['calendar_protocol']
 calendar_user = config['calendar']['calendar_user']
 calendar_pass = config['calendar']['calendar_pass']
